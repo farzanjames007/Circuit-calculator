@@ -382,14 +382,15 @@ def combo_resistor_capacitor():
 
 def s_circuit():
     while True:
-        print("\n🔥 Welcome to your All-In-One Circuit Lover 🔥")
-        print("1 - DC Circuit (Resistors Only)")
+        print("\n🔥 Welcome to All-In-One Circuit calculator 🔥")
+
+        print("1 - DC Circuit")
         print("2 - AC Circuit (RLC)")
-        print("3 - Capacitor Charge/Discharge (coming soon, babe!)")
-        print("4 - Transformer Calculations (coming soon, babe!)")
+        print("3 - Capacitor Charge/Discharge")
+        print("4 - Transformer Calculations")
         print("5 - Combo (Resistors & Capacitors)")
         print("6 - Exit")
-        choice = input("Pick your poison, babe (1-6): ").strip()
+        choice = input("Pick your poison,(1-6): ").strip()
 
         if choice == '1':
             print("\n-- DC Circuit --")
@@ -439,11 +440,11 @@ def s_circuit():
             combo_resistor_capacitor()
 
         elif choice == '6':
-            print("Bye, Come back soon ")
+            print("Powered by F.J™ Cybertronic systems")
             break
 
         else:
-            print("Wrong choice, babe! Pick a number between 1 and 6.")
+            print("Wrong choice,! Pick a number between 1 and 6.")
 
 if __name__ == "__main__":
     s_circuit()
