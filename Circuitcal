@@ -1,0 +1,449 @@
+import math
+
+import math
+
+def parse_value_with_unit(input_str):
+    input_str = input_str.strip().lower().replace('μ', 'u')
+    multipliers = {'k':1e3, 'm':1e-3, 'u':1e-6, 'n':1e-9, 'meg':1e6}
+    for unit, mult in multipliers.items():
+        if input_str.endswith(unit):
+            try:
+                return float(input_str[:-len(unit)]) * mult
+            except ValueError:
+                return None
+    try:
+        return float(input_str)
+    except ValueError:
+        return None
+
+def resistors_series(resistors):
+    return sum(resistors)
+
+def resistors_parallel(resistors):
+    return 1 / sum(1 / r for r in resistors if r != 0)
+
+def capacitors_series(capacitors):
+    if any(c == 0 for c in capacitors):
+        return 0
+    return 1 / sum(1 / c for c in capacitors)
+
+def capacitors_parallel(capacitors):
+    return sum(capacitors)
+
+def inductors_series(inductors):
+    return sum(inductors)
+
+def inductors_parallel(inductors):
+    return 1 / sum(1 / l for l in inductors if l != 0)
+
+def calculate_dc(V, R):
+    I = V / R if R != 0 else float('inf')
+    P = V * I
+    return I, V, P
+
+def calculate_ac(V_rms, R, L, C, freq):
+    omega = 2 * math.pi * freq
+    X_L = omega * L
+    X_C = 1 / (omega * C) if C > 0 else 0
+    Z_real = R
+    Z_imag = X_L - X_C
+    Z_mag = math.sqrt(Z_real**2 + Z_imag**2)
+    I_rms = V_rms / Z_mag if Z_mag != 0 else 0
+    P = I_rms**2 * R
+    phase_angle = math.degrees(math.atan2(Z_imag, Z_real)) if Z_mag != 0 else 0
+    return I_rms, Z_mag, P, phase_angle
+
+def sexy_circuit_calculator():
+    while True:
+        print("\n Welcome to your All-In-One Circuit ")
+        print("1 - DC Circuit (Resistors only)")
+        print("2 - AC Circuit (RLC)")
+        print("3 - Capacitor Charge/Discharge (coming soon, babe!)")
+        print("4 - Transformer Calculations (coming soon, babe!)")
+        print("5 - Combo (Resistors & Capacitors)")
+        print("6 - Exit")
+
+        choice = input("Choose your seduction (1-6): ").strip()
+        if choice == '6':
+            print("Alright, powering down. Until next time 🔥")
+            break
+
+        if choice == '1':  # DC Circuit
+            print("\nVoltage Voltage, tell me your voltage (Volts):")
+            while True:
+                V = parse_value_with_unit(input("Voltage (e.g. 5, 12V, 1.5k): "))
+                if V is not None:
+                    break
+
+            print("\nHow many resistors wanna play?")
+            while True:
+                try:
+                    n_r = int(input("Number of resistors: "))
+                    if n_r > 0:
+                        break
+                except:
+                    pass
+
+            resistors = []
+            for i in range(n_r):
+                while True:
+                    val = parse_value_with_unit(input(f"Resistor {i+1} value (Ohms, k, M): "))
+                    if val is not None:
+                        resistors.append(val)
+                        break
+
+            r_config = input("Resistors in Series or Parallel? (S/P): ").strip().upper()
+            if r_config == 'S':
+                R_total = resistors_series(resistors)
+            else:
+                R_total = resistors_parallel(resistors)
+
+            I, V_drop, P = calculate_dc(V, R_total)
+            print(f"\nDC Circuit Results:")
+            print(f"Total Resistance: {R_total:.4f} Ω")
+            print(f"Current: {I:.4f} A")
+            print(f"Voltage Drop Across Resistors: {V_drop:.4f} V")
+            print(f"Power Dissipated: {P:.4f} W")
+
+            if P > 0.25:
+                print("🔥 Warning: Resistor’s power rating exceeded! Things are heating up!")
+            else:
+                print("✅ Power is safe.")
+
+        elif choice == '2':  # AC Circuit
+            print("\nVoltage Voltage, tell me your voltage (RMS, Volts):")
+            while True:
+                V = parse_value_with_unit(input("Voltage RMS (e.g. 120, 230V, 1.5k): "))
+                if V is not None:
+                    break
+
+            print("\nResistors first, darling. How many?")
+            while True:
+                try:
+                    n_r = int(input("Number of resistors: "))
+                    if n_r > 0:
+                        break
+                except:
+                    pass
+
+            resistors = []
+            for i in range(n_r):
+                while True:
+                    val = parse_value_with_unit(input(f"Resistor {i+1} value (Ohms, k, M): "))
+                    if val is not None:
+                        resistors.append(val)
+                        break
+
+            r_config = input("Resistors in Series or Parallel? (S/P): ").strip().upper()
+            if r_config == 'S':
+                R_total = resistors_series(resistors)
+            else:
+                R_total = resistors_parallel(resistors)
+
+            print("\nCapacitors wanna join the party. How many?")
+            while True:
+                try:
+                    n_c = int(input("Number of capacitors: "))
+                    if n_c >= 0:
+                        break
+                except:
+                    pass
+
+            capacitors = []
+            if n_c > 0:
+                for i in range(n_c):
+                    while True:
+                        val = parse_value_with_unit(input(f"Capacitor {i+1} value (Farads, u, n, m): "))
+                        if val is not None:
+                            capacitors.append(val)
+                            break
+
+                c_config = input("Capacitors in Series or Parallel? (S/P): ").strip().upper()
+                if c_config == 'S':
+                    C_total = capacitors_series(capacitors)
+                else:
+                    C_total = capacitors_parallel(capacitors)
+            else:
+                C_total = 0
+
+            print("\nInductors, baby. How many?")
+            while True:
+                try:
+                    n_l = int(input("Number of inductors: "))
+                    if n_l >= 0:
+                        break
+                except:
+                    pass
+
+            inductors = []
+            if n_l > 0:
+                for i in range(n_l):
+                    while True:
+                        val = parse_value_with_unit(input(f"Inductor {i+1} value (Henrys, m, u, n): "))
+                        if val is not None:
+                            inductors.append(val)
+                            break
+                l_config = input("Inductors in Series or Parallel? (S/P): ").strip().upper()
+                if l_config == 'S':
+                    L_total = inductors_series(inductors)
+                else:
+                    L_total = inductors_parallel(inductors)
+            else:
+                L_total = 0
+
+            freq = None
+            while freq is None:
+                try:
+                    freq = float(input("Frequency (Hz): "))
+                    if freq <= 0:
+                        freq = None
+                except:
+                    freq = None
+
+            I, Z, P, phase = calculate_ac(V, R_total, L_total, C_total, freq)
+            print(f"\nAC Circuit Results:")
+            print(f"Total Resistance: {R_total:.4f} Ω")
+            print(f"Total Capacitance: {C_total:.8f} F")
+            print(f"Total Inductance: {L_total:.6f} H")
+            print(f"Impedance Magnitude: {Z:.4f} Ω")
+            print(f"Current RMS: {I:.4f} A")
+            print(f"Power Dissipated: {P:.4f} W")
+            print(f"Phase Angle: {phase:.2f}° (positive = inductive, negative = capacitive)")
+
+            if P > 0.25:
+                print("🔥 Warning: Resistor’s power rating exceeded! Keep it cool!")
+            else:
+                print("✅ Power is safe.")
+
+        elif choice == '3':
+            print("\nCapacitor Charge/Discharge coming soon, Stay tuned 🔥")
+
+        elif choice == '4':
+            print("\nTransformer Calculations coming soon, Keep that voltage 🔥")
+
+        elif choice == '5':  # Combo Resistors + Capacitors
+            print("\nLet’s mix it up, babe! Voltage first:")
+            while True:
+                V = parse_value_with_unit(input("Voltage (Volts): "))
+                if V is not None:
+                    break
+
+            print("How many resistors?")
+            while True:
+                try:
+                    n_r = int(input("Number of resistors: "))
+                    if n_r > 0:
+                        break
+                except:
+                    pass
+
+            resistors = []
+            for i in range(n_r):
+                while True:
+                    val = parse_value_with_unit(input(f"Resistor {i+1} value (Ohms, k, M): "))
+                    if val is not None:
+                        resistors.append(val)
+                        break
+
+            r_config = input("Resistors in Series or Parallel? (S/P): ").strip().upper()
+            if r_config == 'S':
+                R_total = resistors_series(resistors)
+            else:
+                R_total = resistors_parallel(resistors)
+
+            print("How many capacitors?")
+            while True:
+                try:
+                    n_c = int(input("Number of capacitors: "))
+                    if n_c >= 0:
+                        break
+                except:
+                    pass
+
+            capacitors = []
+            if n_c > 0:
+                for i in range(n_c):
+                    while True:
+                        val = parse_value_with_unit(input(f"Capacitor {i+1} value (Farads, u, n, m): "))
+                        if val is not None:
+                            capacitors.append(val)
+                            break
+
+                c_config = input("Capacitors in Series or Parallel? (S/P): ").strip().upper()
+                if c_config == 'S':
+                    C_total = capacitors_series(capacitors)
+                else:
+                    C_total = capacitors_parallel(capacitors)
+            else:
+                C_total = 0
+
+            # Calculate combo simple: Voltage across R and C in series or parallel combo?
+            # For simplicity, just calculate total reactance and resistance here
+# --- Calculation functions ---
+
+def calculate_dc(V, R):
+    if R == 0:
+        I = float('inf')
+    else:
+        I = V / R
+    P = V * I
+    return I, V, P
+
+def calculate_ac(V_rms, R, L, C, freq):
+    omega = 2 * math.pi * freq
+    X_L = omega * L if L > 0 else 0
+    X_C = 1 / (omega * C) if C > 0 else 0
+    Z_real = R
+    Z_imag = X_L - X_C
+    Z_mag = math.sqrt(Z_real ** 2 + Z_imag ** 2)
+    if Z_mag == 0:
+        I_rms = 0
+        phase_angle = 0
+    else:
+        I_rms = V_rms / Z_mag
+        phase_angle = math.degrees(math.atan2(Z_imag, Z_real))
+    P = I_rms ** 2 * R
+    return I_rms, Z_mag, P, phase_angle
+
+# --- Sexy Circuit Lover Core ---
+
+def ask_resistors():
+    n = int(input("How many resistors you got, babe? "))
+    resistors = []
+    for i in range(n):
+        r = float(input(f"Resistance of resistor {i+1} (Ω): "))
+        resistors.append(r)
+    config = input("Resistors in Series or Parallel? (S/P): ").strip().upper()
+    if config == 'S':
+        R_total = resistors_series(resistors)
+    else:
+        R_total = resistors_parallel(resistors)
+    print(f"🔥 Total Resistance calculated: {R_total:.4f} Ω")
+    return R_total
+
+def ask_capacitors():
+    n = int(input("How many capacitors you’re bringing? "))
+    capacitors = []
+    for i in range(n):
+        c = float(input(f"Capacitance of capacitor {i+1} (F): "))
+        capacitors.append(c)
+    config = input("Capacitors in Series or Parallel? (S/P): ").strip().upper()
+    if config == 'S':
+        C_total = capacitors_series(capacitors)
+    else:
+        C_total = capacitors_parallel(capacitors)
+    print(f"Total Capacitance calculated: {C_total:.8f} F")
+    return C_total
+
+def ask_inductors():
+    n = int(input("Got inductors? How many? "))
+    if n == 0:
+        print("No inductors? No inductance calculation then, babe.")
+        return 0
+    inductors = []
+    for i in range(n):
+        l = float(input(f"Inductance of inductor {i+1} (H): "))
+        inductors.append(l)
+    config = input("Inductors in Series or Parallel? (S/P): ").strip().upper()
+    if config == 'S':
+        L_total = inductors_series(inductors)
+    else:
+        L_total = inductors_parallel(inductors)
+    print(f"⚡ Total Inductance calculated: {L_total:.6f} H")
+    return L_total
+
+def combo_resistor_capacitor():
+    print("\n🔥 Welcome to the Combo Seduction — Resistors + Capacitors!\n")
+    V = float(input("Voltage (Volts): "))
+    # Resistors
+    R_total = ask_resistors()
+    # Capacitors
+    C_total = ask_capacitors()
+    freq = float(input("Frequency (Hz): "))
+    omega = 2 * math.pi * freq
+    # Calculate impedance of capacitor
+    X_C = 1 / (omega * C_total) if C_total > 0 else float('inf')
+    Z_total = math.sqrt(R_total**2 + X_C**2)
+    I = V / Z_total if Z_total != 0 else 0
+    P = I**2 * R_total
+    phase_angle = math.degrees(math.atan2(-X_C, R_total))
+    print(f"\nCombo Results:")
+    print(f"Total Resistance: {R_total:.4f} Ω")
+    print(f"Total Capacitance: {C_total:.8f} F")
+    print(f"Impedance Magnitude: {Z_total:.4f} Ω")
+    print(f"Current: {I:.4f} A")
+    print(f"Power Dissipated: {P:.4f} W")
+    print(f"Phase Angle: {phase_angle:.2f}° (capacitive)")
+
+    if P > 0.25:
+        print("🔥 Warning: Power rating exceeded! Circuit’s getting hot, babe!")
+    else:
+        print("✅ Power is safe and sizzling.")
+
+def s_circuit():
+    while True:
+        print("\n🔥 Welcome to your All-In-One Circuit Lover 🔥")
+        print("1 - DC Circuit (Resistors Only)")
+        print("2 - AC Circuit (RLC)")
+        print("3 - Capacitor Charge/Discharge (coming soon, babe!)")
+        print("4 - Transformer Calculations (coming soon, babe!)")
+        print("5 - Combo (Resistors & Capacitors)")
+        print("6 - Exit")
+        choice = input("Pick your poison, babe (1-6): ").strip()
+
+        if choice == '1':
+            print("\n-- DC Circuit --")
+            V = float(input("Voltage (Volts): "))
+            R_total = ask_resistors()
+            I, V_drop, P = calculate_dc(V, R_total)
+            print(f"\nDC Results:")
+            print(f"Current: {I:.4f} A")
+            print(f"Voltage Drop: {V_drop:.4f} V")
+            print(f"Power Dissipated: {P:.4f} W")
+            if P > 0.25:
+                print("🔥 Warning: Power rating exceeded! Resistor's feeling the heat!")
+            else:
+                print("✅ Power is safe and sultry.")
+
+        elif choice == '2':
+            print("\n-- AC Circuit --")
+            V = float(input("RMS Voltage (Volts): "))
+            R_total = ask_resistors()
+            L_total = ask_inductors()
+            C_total = ask_capacitors()
+            freq = float(input("Frequency (Hz): "))
+            if L_total == 0 and C_total == 0:
+                print("No inductors or capacitors given, cannot calculate AC impedance properly, babe.")
+                continue
+            I, Z, P, phase = calculate_ac(V, R_total, L_total, C_total, freq)
+            print(f"\nAC Results:")
+            print(f"Total Resistance: {R_total:.4f} Ω")
+            print(f"Total Inductance: {L_total:.6f} H")
+            print(f"Total Capacitance: {C_total:.8f} F")
+            print(f"Impedance Magnitude: {Z:.4f} Ω")
+            print(f"Current RMS: {I:.4f} A")
+            print(f"Power Dissipated: {P:.4f} W")
+            print(f"Phase Angle: {phase:.2f}° (positive = inductive, negative = capacitive)")
+            if P > 0.25:
+                print("🔥 Warning: Resistor’s power rating exceeded! Keep it cool !")
+            else:
+                print("✅ Power is safe and sexy.")
+
+        elif choice == '3':
+            print("\nCapacitor Charge/Discharge feature coming soon, babe! Stay tuned! 🔥")
+
+        elif choice == '4':
+            print("\nTransformer Calculations coming soon,🔥")
+
+        elif choice == '5':
+            combo_resistor_capacitor()
+
+        elif choice == '6':
+            print("Bye, Come back soon ")
+            break
+
+        else:
+            print("Wrong choice, babe! Pick a number between 1 and 6.")
+
+if __name__ == "__main__":
+    s_circuit()
